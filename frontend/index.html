@@ -2,12 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
+    <title>Chip 8</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <div class="w-full flex flex-col justify-center items-center mt-5">
+      <canvas id="canvas" class="border border-black"></canvas>
+      <input type="file" name="Rom" id="">
+      <button class="border rounded p-1">Play</button>
+      <button class="border rounded p-1">Reset</button>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
