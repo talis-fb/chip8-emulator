@@ -69,6 +69,8 @@ export class CpuAdapter {
     }
 
     public cycle() {
+        let currentSecond = new Date().getSeconds()
+        console.log(`cycle ${currentSecond}`)
         wasmExports.cycle()
     }
 }

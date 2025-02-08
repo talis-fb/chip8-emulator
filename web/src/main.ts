@@ -30,7 +30,20 @@ import { loadWasm } from './wasm.ts'
         console.log(isOn)
     })
 
-    // cpu.cycle()a
+
+    let isRunning = false
+
+    let animationID: number
+    const playRunner = () => {
+        if (!isRunning) {
+            window.cancelAnimationFrame(animationID)
+            return;
+        }
+        
+        cpu.cycle()
+
+        animationID = requestAnimationFrame(playRunner)
+    }
 
     document.addEventListener('keydown', (event) => {
         event.preventDefault();
@@ -45,32 +58,18 @@ import { loadWasm } from './wasm.ts'
 
     document.getElementById('btn-play')?.addEventListener('click', () => {
         console.log('play')
+        isRunning = true
+        requestAnimationFrame(playRunner)
     })
 
     document.getElementById('btn-pause')?.addEventListener('click', () => {
         console.log('pause')
+        isRunning = false
     })
 
     document.getElementById('btn-reset')?.addEventListener('click', () => {
         console.log('reset')
+        isRunning = false
     })  
 
 })()
-
-// const canvas = document.getElementById('canvas') as HTMLCanvasElement
-// const ctx = canvas.getContext('2d')!
-
-// const cpu = new CpuAdapter()
-// cpu.setRom(ROMS[0])
-
-// cpu.onDraw(() => {
-//     ctx.clearRect(0, 0, canvas.width, canvas.height)
-//     ctx.fillStyle = 'black'
-//     ctx.fillRect(0, 0, canvas.width, canvas.height)
-// })
-
-// cpu.onSound((isOn) => {
-//     console.log(isOn)
-// })
-
-// cpu.cycle()
