@@ -263,13 +263,16 @@ func (c *Chip8) execute_DXYN(X uint16, Y uint16, N uint16) {
 	collision := false
 	sprite := c.Memory[c.I : c.I+N]
 
+	vx := uint16(c.V[X])
+	vy := uint16(c.V[Y])
+
 	for i := 0; i < len(sprite); i++ {
 		row := sprite[i]
 		for j := 0; j < 8; j++ {
-			newPixel := row >> (7 - j) & 0x1
+			newPixel := row >> (7 - j) & 0x01
 			if newPixel == 1 {
-				xi := (X + uint16(i)) % WIDTH
-				yi := (Y + uint16(j)) % HEIGHT
+				xi := (vx + uint16(j)) % WIDTH
+				yi := (vy + uint16(i)) % HEIGHT
 				lastPixel := c.Display[xi+yi*WIDTH]
 				if lastPixel {
 					collision = true

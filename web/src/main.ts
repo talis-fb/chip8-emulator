@@ -11,9 +11,6 @@ import { loadWasm } from './wasm.ts'
     const cpu = new CpuAdapter()
     cpu.setRom('IBM')
 
-    ctx.fillStyle = 'black'
-    ctx.fillRect(1, 1, 1, 1)
-
     cpu.onDraw((arr) => {
         console.log('arr onDraw')
         console.log(arr)
