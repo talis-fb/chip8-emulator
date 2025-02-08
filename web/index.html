@@ -6,13 +6,20 @@
     <title>Chip 8</title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="/wasm/wasm_exec.js"></script>
   </head>
   <body>
     <div class="w-full flex flex-col justify-center items-center mt-5">
       <canvas id="canvas" class="border border-black"></canvas>
-      <input type="file" name="Rom" id="">
-      <button class="border rounded p-1">Play</button>
-      <button class="border rounded p-1">Reset</button>
+      
+      <label for="rom-select">Choose a ROM:</label>
+      <select id="rom-select">
+          <option  value="IBM" selected>IBM</option>
+      </select>
+
+      <button id="btn-play" class="border rounded p-1">Play</button>
+      <button id="btn-pause" class="border rounded p-1">Pause</button>
+      <button id="btn-reset" class="border rounded p-1">Reset</button>
     </div>
 
     <script type="module" src="./src/main.ts"></script>
