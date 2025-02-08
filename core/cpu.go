@@ -4,6 +4,9 @@ import (
 	"math/rand"
 )
 
+const WIDTH uint16 = 64
+const HEIGHT uint16 = 32
+
 type Chip8 struct {
 	I          uint16
 	V          [16]byte
@@ -14,7 +17,7 @@ type Chip8 struct {
 	Stack      [16]uint16
 	SP         uint16
 	Keyboard   [16]bool
-	Display    [64 * 32]byte
+	Display    [64 * 32]bool
 }
 
 func (c *Chip8) ExecuteOpcode(opcode uint16) {
@@ -111,7 +114,7 @@ func (c *Chip8) ExecuteOpcode(opcode uint16) {
 
 // 00E0 - Clear the display
 func (c *Chip8) execute_00E0() {
-	c.Display = [64 * 32]byte{} // Reset the display buffer
+	c.Display = [64 * 32]bool{} // Reset the display buffer
 	c.PC += 2
 }
 
@@ -259,8 +262,31 @@ func (c *Chip8) execute_CXKK(X uint16, K2 uint16, K1 uint16) {
 
 // DXYN - Draw sprite at coordinates (VX, VY) with N bytes of sprite data
 func (c *Chip8) execute_DXYN(X uint16, Y uint16, N uint16) {
-	// Assuming the sprite drawing function here
-	// We'll need to implement the logic to draw the sprite on the display and set VF for collision detection.
+	collision := false
+	sprite := c.Memory[c.I : c.I+N]
+
+	for i := 0; i < len(sprite); i++ {
+		row := sprite[i]
+		for j := 0; j < 8; j++ {
+			newPixel := row >> (7 - j) & 0x1
+			if newPixel == 1 {
+				xi := (X + uint16(i)) % WIDTH
+				yi := (Y + uint16(j)) % HEIGHT
+				lastPixel := c.Display[xi+yi*WIDTH]
+				if lastPixel {
+					collision = true
+				}
+				c.Display[xi+yi*WIDTH] = lastPixel != (newPixel == 1)
+			}
+		}
+	}
+
+	if collision {
+		c.V[0xF] = 1
+	} else {
+		c.V[0xF] = 0
+	}
+
 }
 
 // EX9E - Skip next instruction if key with the value of VX is pressed
