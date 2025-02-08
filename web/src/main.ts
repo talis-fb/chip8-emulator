@@ -16,6 +16,11 @@ import { loadWasm } from './wasm.ts'
     cpu.onDraw((arr) => {
         console.log('arr onDraw')
         console.log(arr)
+        const pixels = Array.from(arr)
+        console.log('pixels')
+        console.log(pixels)
+
+        
         // ctx.clearRect(0, 0, canvas.width, canvas.height)
         // ctx.fillStyle = 'black'
         // ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -25,14 +30,16 @@ import { loadWasm } from './wasm.ts'
         console.log(isOn)
     })
 
-    cpu.cycle()
+    // cpu.cycle()a
 
     document.addEventListener('keydown', (event) => {
-        cpu.setKey(event.keyCode, true)
+        event.preventDefault();
+        cpu.setKey(event.key, true)
     })
 
     document.addEventListener('keyup', (event) => {
-        cpu.setKey(event.keyCode, false)
+        event.preventDefault();
+        cpu.setKey(event.key, false)
     })
 
 

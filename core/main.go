@@ -29,6 +29,31 @@ func onDraw(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
+var keyboard [16]bool
+
+func setKey(this js.Value, args []js.Value) interface{} {
+	println("[WASM] setKey called")
+
+	key := args[0].Int()
+	isPressed := args[1].Bool()
+
+	println(key, isPressed)
+
+	keyboard[key] = isPressed
+
+	return nil
+}
+
+func reset(this js.Value, args []js.Value) interface{} {
+	println("[WASM] reset called")
+	return nil
+}
+
+func cycle(this js.Value, args []js.Value) interface{} {
+	println("[WASM] cycle called")
+	return nil
+}
+
 func main() {
 	c := make(chan struct{}, 0)
 
@@ -38,6 +63,12 @@ func main() {
 	}))
 
 	js.Global().Set("onDraw", js.FuncOf(onDraw))
+
+	js.Global().Set("setKey", js.FuncOf(setKey))
+
+	js.Global().Set("reset", js.FuncOf(reset))
+
+	js.Global().Set("cycle", js.FuncOf(cycle))
 
 	<-c // Block the Go runtime from exiting
 }

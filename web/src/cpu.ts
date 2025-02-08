@@ -22,7 +22,7 @@ export class CpuAdapter {
             const arrayBuffer = await response.arrayBuffer();
             const romData = new Uint8Array(arrayBuffer);
 
-            //wasmExports.setRom(romData);
+            wasmExports.setRom(romData);
 
             console.log(`ROM "${romName}" loaded successfully.`);
         } catch (error) {
@@ -35,18 +35,40 @@ export class CpuAdapter {
     }
 
     public onSound(cb: (isOn: boolean) => void) {
-        // wasmExports.onSound(cb);
+        wasmExports.onSound(cb);
     }
 
-    public setKey(key: number, isPressed: boolean) {
-        //
+    public setKey(key: string, isPressed: boolean) {
+        const keyCodes = {
+            '1': 0x1,
+            '2': 0x2,
+            '3': 0x3,
+            '4': 0xC,
+            'q': 0x4,
+            'w': 0x5,
+            'e': 0x6,
+            'r': 0xD,
+            'a': 0x7,
+            's': 0x8,
+            'd': 0x9,
+            'f': 0xE,
+            'z': 0xA,
+            'x': 0x0,
+            'c': 0xB,
+            'v': 0xF
+        } as Record<string, number | undefined>;
+ 
+        const cpuKeyCode = keyCodes[key];
+        if (cpuKeyCode) {
+            wasmExports.setKey(cpuKeyCode, isPressed)
+        }
     }
 
     public reset() {
-        //
+        wasmExports.reset()
     }
 
     public cycle() {
-        //
+        wasmExports.cycle()
     }
 }
