@@ -284,8 +284,13 @@ func (c *Chip8) execute_FX07(X uint16) {
 
 // FX0A - Wait for a key press and store it in VX
 func (c *Chip8) execute_FX0A(X uint16) {
-	// Wait for a key press, and store the key in VX
-	// We'll need to implement waiting for keypress and storing the result
+	c.PC -= 2
+	for i := 0; i < 16; i++ {
+		if c.Keyboard[i] {
+			c.V[X] = byte(i)
+			c.PC += 2
+		}
+	}
 }
 
 // FX15 - Set delay timer = VX
