@@ -1,5 +1,3 @@
-import './ui.ts'
-
 import { CpuAdapter } from './cpu.ts'
 import { loadWasm } from './wasm.ts'
 
@@ -13,13 +11,28 @@ import { loadWasm } from './wasm.ts'
     const cpu = new CpuAdapter()
     cpu.setRom('IBM')
 
+    ctx.fillStyle = 'black'
+    ctx.fillRect(1, 1, 1, 1)
+
     cpu.onDraw((arr) => {
         console.log('arr onDraw')
         console.log(arr)
         const pixels = Array.from(arr)
-        console.log('pixels')
-        console.log(pixels)
+        console.log('pixels to paint')
+        console.log(pixels.map((p, i) => [i, p] as const).filter(([_, p]) => p !== 0).map(([i]) => i))
+        
+        pixels.map((p) => Boolean(p)).forEach((p, i) => {
+            const x = i % 64
+            const y = Math.floor(i / 64)
 
+            ctx.fillRect(x, y, 1, 1)
+            if (p) {
+                ctx.fillStyle = 'black'
+            } else {
+                ctx.fillStyle = 'white'
+            }
+
+        })
         
         // ctx.clearRect(0, 0, canvas.width, canvas.height)
         // ctx.fillStyle = 'black'
@@ -35,31 +48,45 @@ import { loadWasm } from './wasm.ts'
 
     let animationID: number
     const playRunner = () => {
-        if (!isRunning) {
-            window.cancelAnimationFrame(animationID)
-            return;
-        }
-        
-        cpu.cycle()
-
-        animationID = requestAnimationFrame(playRunner)
+        animationID = setInterval(() => {
+            if (!isRunning) {
+                window.clearInterval(animationID)
+                return;
+            }
+            
+            cpu.cycle()
+        }, 400)
     }
 
+    // const playRunner = () => {
+    //     if (!isRunning) {
+    //         window.cancelAnimationFrame(animationID)
+    //         return;
+    //     }
+        
+    //     cpu.cycle()
+
+    //     animationID = requestAnimationFrame(playRunner)
+    // }
+
     document.addEventListener('keydown', (event) => {
-        event.preventDefault();
+        // event.preventDefault();
         cpu.setKey(event.key, true)
     })
 
     document.addEventListener('keyup', (event) => {
-        event.preventDefault();
+        // event.preventDefault();
         cpu.setKey(event.key, false)
     })
 
 
     document.getElementById('btn-play')?.addEventListener('click', () => {
         console.log('play')
-        isRunning = true
-        requestAnimationFrame(playRunner)
+        if (!isRunning) {
+            isRunning = true
+            requestAnimationFrame(playRunner)
+        }
+
     })
 
     document.getElementById('btn-pause')?.addEventListener('click', () => {

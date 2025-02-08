@@ -4,6 +4,8 @@
 package main
 
 import (
+	"fmt"
+	"sync"
 	"syscall/js"
 )
 
@@ -32,15 +34,40 @@ func main() {
 
 var chip8 Chip8
 
+var m sync.Mutex
+
 // it assumes the client is running it 60Hz
 func cycle(this js.Value, args []js.Value) interface{} {
-	opcode := uint16(chip8.Memory[chip8.PC])<<8 | uint16(chip8.Memory[chip8.PC+1])
+	println("[WASM] Cycle")
 
-	chip8.ExecuteOpcode(opcode)
+	c := make(chan interface{}, 0)
 
-	chip8.PC += 2
+	// Probaly this is not the best way to do it
+	go func() {
+		m.Lock()
+		defer m.Unlock()
 
-	return nil
+		opcode := uint16(chip8.Memory[chip8.PC])<<8 | uint16(chip8.Memory[chip8.PC+1])
+
+		hexStr := fmt.Sprintf("%04X", opcode)
+		println("[WASM] Executing opcode:", hexStr, " | PC:", chip8.PC)
+
+		chip8.ExecuteOpcode(opcode)
+
+		if (opcode & 0xF000) == 0xD000 {
+			invokeDrawCallback()
+		}
+
+		if chip8.SoundTimer > 0 {
+			soundCallback.Invoke()
+		}
+
+		chip8.PC += 2
+
+		c <- opcode
+	}()
+
+	return <-c
 }
 
 func setRom(this js.Value, args []js.Value) interface{} {
@@ -55,6 +82,8 @@ func setRom(this js.Value, args []js.Value) interface{} {
 		chip8.Memory[i+0x200] = romData[i]
 	}
 
+	chip8.PC = 0x200
+
 	println("ROM loaded:", len(romData), "bytes")
 
 	return nil
@@ -68,6 +97,19 @@ func onDraw(this js.Value, args []js.Value) interface{} {
 		drawCallback = args[0]
 	}
 	return nil
+}
+
+func invokeDrawCallback() {
+	screenBuffer := chip8.Display
+
+	jsArray := js.Global().Get("Uint8Array").New(len(screenBuffer))
+	for i, pixel := range screenBuffer {
+		jsArray.SetIndex(i, pixel)
+	}
+
+	if drawCallback.Type() == js.TypeFunction {
+		drawCallback.Invoke(jsArray)
+	}
 }
 
 var soundCallback js.Value

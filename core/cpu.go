@@ -21,8 +21,6 @@ type Chip8 struct {
 }
 
 func (c *Chip8) ExecuteOpcode(opcode uint16) {
-	println("Executing opcode:", opcode)
-
 	n4 := (opcode & 0xF000) >> 12
 	n3 := (opcode & 0x0F00) >> 8
 	n2 := (opcode & 0x00F0) >> 4
