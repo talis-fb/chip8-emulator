@@ -43,7 +43,6 @@ import { loadWasm } from './wasm.ts'
     let animationID: number
 
     /*
-    */
     const playRunner = () => {
         animationID = setInterval(() => {
             if (!isRunning) {
@@ -54,8 +53,10 @@ import { loadWasm } from './wasm.ts'
             cpu.cycle()
         }, 1000)
     }
-
-    /*
+    
+    */
+   /*
+   */
     const playRunner = () => {
         if (!isRunning) {
            window.cancelAnimationFrame(animationID)
@@ -66,7 +67,6 @@ import { loadWasm } from './wasm.ts'
 
         animationID = requestAnimationFrame(playRunner)
     }
-    */
     
     document.addEventListener('keydown', (event) => {
         // event.preventDefault();
