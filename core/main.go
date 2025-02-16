@@ -104,6 +104,10 @@ func setRom(this js.Value, args []js.Value) interface{} {
 
 	chip8.PC = 0x200
 
+	for i := 0; i < len(FONT_SET); i++ {
+		chip8.Memory[i] = FONT_SET[i]
+	}
+
 	println("ROM loaded:", len(romData), "bytes")
 
 	return nil
