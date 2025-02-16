@@ -9,28 +9,25 @@ import { loadWasm } from './wasm.ts'
     const ctx = canvas.getContext('2d')!
 
     const cpu = new CpuAdapter()
-    cpu.setRom('IBM')
+    cpu.setRom('CORAX')
 
     cpu.onDraw((arr) => {
-        console.log('arr onDraw')
-        console.log(arr)
-        const pixels = Array.from(arr)
-        console.log('pixels to paint')
-        console.log(pixels.map((p, i) => [i, p] as const).filter(([_, p]) => p !== 0).map(([i]) => i))
+        // console.log('arr onDraw')
+        // console.log(arr)
+        // console.log('pixels to paint')
+        // console.log(pixels.map((p, i) => [i, p] as const).filter(([_, p]) => p !== 0).map(([i]) => i))
         
-        pixels.map((p) => Boolean(p)).forEach((p, i) => {
-            const x = i % 64
-            const y = Math.floor(i / 64)
-
-            ctx.fillRect(x, y, 1, 1)
+        arr.forEach((p, i) => {
             if (p) {
                 ctx.fillStyle = 'black'
             } else {
                 ctx.fillStyle = 'white'
             }
-
+            const x = i % 64
+            const y = Math.floor(i / 64)
+            ctx.fillRect(x * 8, y * 8, 8, 8)
         })
-        
+
         // ctx.clearRect(0, 0, canvas.width, canvas.height)
         // ctx.fillStyle = 'black'
         // ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -44,6 +41,9 @@ import { loadWasm } from './wasm.ts'
     let isRunning = false
 
     let animationID: number
+
+    /*
+    */
     const playRunner = () => {
         animationID = setInterval(() => {
             if (!isRunning) {
@@ -52,20 +52,22 @@ import { loadWasm } from './wasm.ts'
             }
             
             cpu.cycle()
-        }, 400)
+        }, 1000)
     }
 
-    // const playRunner = () => {
-    //     if (!isRunning) {
-    //         window.cancelAnimationFrame(animationID)
-    //         return;
-    //     }
+    /*
+    const playRunner = () => {
+        if (!isRunning) {
+           window.cancelAnimationFrame(animationID)
+           return;
+        }
         
-    //     cpu.cycle()
+        cpu.cycle()
 
-    //     animationID = requestAnimationFrame(playRunner)
-    // }
-
+        animationID = requestAnimationFrame(playRunner)
+    }
+    */
+    
     document.addEventListener('keydown', (event) => {
         // event.preventDefault();
         cpu.setKey(event.key, true)
@@ -76,6 +78,12 @@ import { loadWasm } from './wasm.ts'
         cpu.setKey(event.key, false)
     })
 
+    document.getElementById('rom-select')?.addEventListener('change', (event) => {
+        const romName = (event.target as HTMLSelectElement).value
+        isRunning = false
+        cpu.reset()
+        cpu.setRom(romName)
+    })
 
     document.getElementById('btn-play')?.addEventListener('click', () => {
         console.log('play')
@@ -94,6 +102,7 @@ import { loadWasm } from './wasm.ts'
     document.getElementById('btn-reset')?.addEventListener('click', () => {
         console.log('reset')
         isRunning = false
+        cpu.reset()
     })  
 
 })()
