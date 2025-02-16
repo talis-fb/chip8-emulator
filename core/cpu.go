@@ -67,7 +67,7 @@ func (c *Chip8) ExecuteOpcode(opcode uint16) {
 		case 0x7:
 			c.execute_8XY7(n3, n2)
 		case 0xE:
-			c.execute_8XYE(n3, n2)
+			c.execute_8XYE(n3)
 		}
 	case 0x9:
 		c.execute_9XY0(n3, n2)
@@ -80,46 +80,49 @@ func (c *Chip8) ExecuteOpcode(opcode uint16) {
 	case 0xD:
 		c.execute_DXYN(n3, n2, n1)
 	case 0xE:
-		switch n1 {
-		case 0x9:
+		n2n1 := (n2 << 4) | n1
+		switch n2n1 {
+		case 0x9E:
 			c.execute_EX9E(n3)
-		case 0xA:
+		case 0xA1:
 			c.execute_EXA1(n3)
 		}
 	case 0xF:
-		switch n1 {
-		case 0x1:
+		n2n1 := (n2 << 4) | n1
+		switch n2n1 {
+		case 0x07:
 			c.execute_FX07(n3)
-		case 0x2:
+		case 0x0A:
 			c.execute_FX0A(n3)
-		case 0x3:
+		case 0x15:
 			c.execute_FX15(n3)
-		case 0x4:
+		case 0x18:
 			c.execute_FX18(n3)
-		case 0x5:
+		case 0x1E:
 			c.execute_FX1E(n3)
-		case 0x6:
+		case 0x29:
 			c.execute_FX29(n3)
-		case 0x7:
+		case 0x33:
 			c.execute_FX33(n3)
-		case 0x8:
+		case 0x55:
 			c.execute_FX55(n3)
-		case 0x9:
+		case 0x65:
 			c.execute_FX65(n3)
 		}
+	default:
+		println("[WASM][ERROR] Unknown opcode: ", opcode)
 	}
 }
 
 // 00E0 - Clear the display
 func (c *Chip8) execute_00E0() {
-	c.Display = [64 * 32]bool{} // Reset the display buffer
-	c.PC += 2
+	c.Display = [64 * 32]bool{}
 }
 
 // 00EE - Return from a subroutine
 func (c *Chip8) execute_00EE() {
-	c.SP--
-	c.PC = c.Stack[c.SP]
+	c.SP -= 1
+	c.PC = uint16(c.Stack[c.SP])
 }
 
 // 1NNN - Jump to address NNN
@@ -131,8 +134,8 @@ func (c *Chip8) execute_1NNN(n3 uint16, n2 uint16, n1 uint16) {
 // 2NNN - Call subroutine at address NNN
 func (c *Chip8) execute_2NNN(n3 uint16, n2 uint16, n1 uint16) {
 	address := (uint16(n3) << 8) | (uint16(n2) << 4) | uint16(n1)
-	c.Stack[c.SP] = c.PC
-	c.SP++
+	c.Stack[c.SP] = c.PC + 2
+	c.SP += 1
 	c.PC = address
 }
 
@@ -173,22 +176,22 @@ func (c *Chip8) execute_7XKK(X uint16, K2 uint16, K1 uint16) {
 
 // 8XY0 - Set VX = VY
 func (c *Chip8) execute_8XY0(X uint16, Y uint16) {
-	c.V[X] = c.V[Y]
+	c.V[X] = byte(c.V[Y])
 }
 
 // 8XY1 - Set VX |= VY
 func (c *Chip8) execute_8XY1(X uint16, Y uint16) {
-	c.V[X] |= c.V[Y]
+	c.V[X] |= byte(c.V[Y])
 }
 
 // 8XY2 - Set VX &= VY
 func (c *Chip8) execute_8XY2(X uint16, Y uint16) {
-	c.V[X] &= c.V[Y]
+	c.V[X] &= byte(c.V[Y])
 }
 
 // 8XY3 - Set VX ^= VY
 func (c *Chip8) execute_8XY3(X uint16, Y uint16) {
-	c.V[X] ^= c.V[Y]
+	c.V[X] ^= byte(c.V[Y])
 }
 
 // 8XY4 - Set VX += VY, set VF = carry
@@ -204,7 +207,7 @@ func (c *Chip8) execute_8XY4(X uint16, Y uint16) {
 
 // 8XY5 - Set VX -= VY, set VF = NOT borrow
 func (c *Chip8) execute_8XY5(X uint16, Y uint16) {
-	if c.V[X] > c.V[Y] {
+	if c.V[X] >= c.V[Y] {
 		c.V[0xF] = 1
 	} else {
 		c.V[0xF] = 0
@@ -213,14 +216,14 @@ func (c *Chip8) execute_8XY5(X uint16, Y uint16) {
 }
 
 // 8XY6 - Set VX >>= 1
-func (c *Chip8) execute_8XY6(X uint16, Y uint16) {
+func (c *Chip8) execute_8XY6(X uint16, _ uint16) {
 	c.V[0xF] = c.V[X] & 1
 	c.V[X] >>= 1
 }
 
 // 8XY7 - Set VX = VY - VX, set VF = NOT borrow
 func (c *Chip8) execute_8XY7(X uint16, Y uint16) {
-	if c.V[Y] > c.V[X] {
+	if c.V[Y] >= c.V[X] {
 		c.V[0xF] = 1
 	} else {
 		c.V[0xF] = 0
@@ -229,8 +232,8 @@ func (c *Chip8) execute_8XY7(X uint16, Y uint16) {
 }
 
 // 8XYE - Set VX <<= 1
-func (c *Chip8) execute_8XYE(X uint16, Y uint16) {
-	c.V[0xF] = c.V[X] >> 7
+func (c *Chip8) execute_8XYE(X uint16) {
+	c.V[0xF] = c.V[X] & 0x80
 	c.V[X] <<= 1
 }
 
@@ -306,28 +309,29 @@ func (c *Chip8) execute_EXA1(X uint16) {
 
 // FX07 - Set VX = delay timer
 func (c *Chip8) execute_FX07(X uint16) {
-	c.V[X] = c.DelayTimer
+	c.V[X] = byte(c.DelayTimer)
 }
 
 // FX0A - Wait for a key press and store it in VX
 func (c *Chip8) execute_FX0A(X uint16) {
 	c.PC -= 2
-	for i := 0; i < 16; i++ {
+	for i := 0; i < len(c.Keyboard); i++ {
 		if c.Keyboard[i] {
 			c.V[X] = byte(i)
 			c.PC += 2
+			break
 		}
 	}
 }
 
 // FX15 - Set delay timer = VX
 func (c *Chip8) execute_FX15(X uint16) {
-	c.DelayTimer = c.V[X]
+	c.DelayTimer = byte(c.V[X])
 }
 
 // FX18 - Set sound timer = VX
 func (c *Chip8) execute_FX18(X uint16) {
-	c.SoundTimer = c.V[X]
+	c.SoundTimer = byte(c.V[X])
 }
 
 // FX1E - Add VX to I
@@ -342,22 +346,22 @@ func (c *Chip8) execute_FX29(X uint16) {
 
 // FX33 - Store BCD representation of VX in memory at addresses I, I+1, I+2
 func (c *Chip8) execute_FX33(X uint16) {
-	value := c.V[X]
-	c.Memory[c.I] = value / 100
-	c.Memory[c.I+1] = (value / 10) % 10
-	c.Memory[c.I+2] = value % 10
+	vx := c.V[X]
+	c.Memory[c.I] = vx / 100
+	c.Memory[c.I+1] = (vx / 10) % 10
+	c.Memory[c.I+2] = (vx % 100) / 10 //????
 }
 
 // FX55 - Store V0 to VX in memory starting at address I
 func (c *Chip8) execute_FX55(X uint16) {
 	for i := uint16(0); i <= X; i++ {
-		c.Memory[c.I+i] = c.V[i]
+		c.Memory[c.I+i] = byte(c.V[i])
 	}
 }
 
 // FX65 - Fill V0 to VX from memory starting at address I
 func (c *Chip8) execute_FX65(X uint16) {
 	for i := uint16(0); i <= X; i++ {
-		c.V[i] = c.Memory[c.I+i]
+		c.V[i] = byte(c.Memory[c.I+i])
 	}
 }
