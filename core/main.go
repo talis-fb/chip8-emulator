@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 	"syscall/js"
+	// "time"
 )
 
 func main() {
@@ -36,21 +37,35 @@ var chip8 Chip8
 
 var m sync.Mutex
 
+// var start, end, deltaTime float64 = 0, 0, 0
+// var timeAccumulator float64 = 0
+// var threshold float64 = 1 / 60
+
+var iterations = 0
+
 // it assumes the client is running it 60Hz
 func cycle(this js.Value, args []js.Value) interface{} {
-	println("[WASM] Cycle")
+	// c := make(chan interface{}, 0)
 
-	c := make(chan interface{}, 0)
+	// deltaTime = end - start
+	// start = float64(time.Now().UnixMicro())
+	// timeAccumulator += deltaTime
 
 	// Probaly this is not the best way to do it
-	go func() {
-		m.Lock()
-		defer m.Unlock()
+	// go func() {
+	m.Lock()
+	defer m.Unlock()
+
+	for i := 0; i < 10; i++ {
 
 		opcode := uint16(chip8.Memory[chip8.PC])<<8 | uint16(chip8.Memory[chip8.PC+1])
 
-		hexStr := fmt.Sprintf("%04X", opcode)
-		println("[WASM] Executing opcode:", hexStr, " | PC:", chip8.PC)
+		opcodeHex := fmt.Sprintf("%04X", opcode)
+		pcHex := fmt.Sprintf("%04X", chip8.PC)
+		println("[WASM] Executing opcode:", opcodeHex, " | PC:", pcHex, " | Iteration:", iterations)
+		iterations += 1
+
+		chip8.PC += 2
 
 		chip8.ExecuteOpcode(opcode)
 
@@ -58,16 +73,21 @@ func cycle(this js.Value, args []js.Value) interface{} {
 			invokeDrawCallback()
 		}
 
-		if chip8.SoundTimer > 0 {
-			soundCallback.Invoke()
-		}
+	}
 
-		chip8.PC += 2
+	if chip8.SoundTimer > 0 {
+		soundCallback.Invoke()
+		chip8.SoundTimer--
+	}
 
-		c <- opcode
-	}()
+	if chip8.DelayTimer > 0 {
+		chip8.DelayTimer--
+	}
+	// c <- opcode
+	// }()
 
-	return <-c
+	return nil
+	// return <-c
 }
 
 func setRom(this js.Value, args []js.Value) interface{} {
@@ -92,7 +112,7 @@ func setRom(this js.Value, args []js.Value) interface{} {
 var drawCallback js.Value
 
 func onDraw(this js.Value, args []js.Value) interface{} {
-	println("[WASM] onDraw called")
+	// println("[WASM] onDraw called")
 	if args[0].Type() == js.TypeFunction {
 		drawCallback = args[0]
 	}
@@ -115,7 +135,7 @@ func invokeDrawCallback() {
 var soundCallback js.Value
 
 func onSound(this js.Value, args []js.Value) interface{} {
-	println("[WASM] onSound called")
+	// println("[WASM] onSound called")
 	if args[0].Type() == js.TypeFunction {
 		soundCallback = args[0]
 	}
@@ -124,7 +144,7 @@ func onSound(this js.Value, args []js.Value) interface{} {
 }
 
 func setKey(this js.Value, args []js.Value) interface{} {
-	println("[WASM] setKey called")
+	// println("[WASM] setKey called")
 
 	key := args[0].Int()
 	isPressed := args[1].Bool()
@@ -137,7 +157,7 @@ func setKey(this js.Value, args []js.Value) interface{} {
 }
 
 func reset(this js.Value, args []js.Value) interface{} {
-	println("[WASM] reset called")
+	// println("[WASM] reset called")
 	chip8 = Chip8{}
 	return nil
 }

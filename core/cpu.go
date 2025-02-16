@@ -37,7 +37,7 @@ func (c *Chip8) ExecuteOpcode(opcode uint16) {
 	case 0x1:
 		c.execute_1NNN(n3, n2, n1)
 	case 0x2:
-		c.execute_2NNN(n3, n2, n2)
+		c.execute_2NNN(n3, n2, n1)
 	case 0x3:
 		c.execute_3XKK(n3, n2, n1)
 	case 0x4:
@@ -67,7 +67,7 @@ func (c *Chip8) ExecuteOpcode(opcode uint16) {
 		case 0x7:
 			c.execute_8XY7(n3, n2)
 		case 0xE:
-			c.execute_8XYE(n3)
+			c.execute_8XYE(n3, n2)
 		}
 	case 0x9:
 		c.execute_9XY0(n3, n2)
@@ -134,7 +134,7 @@ func (c *Chip8) execute_1NNN(n3 uint16, n2 uint16, n1 uint16) {
 // 2NNN - Call subroutine at address NNN
 func (c *Chip8) execute_2NNN(n3 uint16, n2 uint16, n1 uint16) {
 	address := (uint16(n3) << 8) | (uint16(n2) << 4) | uint16(n1)
-	c.Stack[c.SP] = c.PC + 2
+	c.Stack[c.SP] = c.PC
 	c.SP += 1
 	c.PC = address
 }
@@ -232,7 +232,7 @@ func (c *Chip8) execute_8XY7(X uint16, Y uint16) {
 }
 
 // 8XYE - Set VX <<= 1
-func (c *Chip8) execute_8XYE(X uint16) {
+func (c *Chip8) execute_8XYE(X uint16, _ uint16) {
 	c.V[0xF] = c.V[X] & 0x80
 	c.V[X] <<= 1
 }

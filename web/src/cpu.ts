@@ -59,7 +59,7 @@ export class CpuAdapter {
         } as Record<string, number | undefined>;
  
         const cpuKeyCode = keyCodes[key];
-        if (cpuKeyCode) {
+        if (cpuKeyCode != undefined) {
             wasmExports.setKey(cpuKeyCode, isPressed)
         }
     }
